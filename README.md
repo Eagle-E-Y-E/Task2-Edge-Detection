@@ -1,1 +1,1 @@
-# Task1-Edge-Detection
+# Task2-Edge-Detection
