@@ -27,7 +27,7 @@ init_contour = Snake.initialize_contour(center, radius, num_points)
 
 # Evolve the snake using the greedy algorithm.
 # Adjust the weights (alpha, beta, gamma) and iteration count as needed.
-final_contour = Snake.evolve_snake(init_contour, E_ext, alpha=0.01, beta=2.0, gamma=2.0, iterations=1000)
+final_contour = Snake.evolve_snake(init_contour, E_ext, alpha=0.5, beta=0.1, gamma=1.0, iterations=100)
 
 # Represent the output as chain code
 chain_code = Snake.compute_chain_code(final_contour)
@@ -37,7 +37,7 @@ perimeter = Snake.compute_perimeter(final_contour)
 area = Snake.compute_area(final_contour)
 
 # Print the results
-print("Chain Code:", chain_code)
+# print("Chain Code:", chain_code)
 print("Perimeter:", perimeter)
 print("Area:", area)
 
