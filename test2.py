@@ -130,6 +130,45 @@ class SnakeApp(QMainWindow):
             self.contour_points = self.contour_points[:-self.last_points]
         self.update_contour()
 
+    def resample_contour_points(self, num_points=None):
+        """
+        Resample the contour points so that they are uniformly spaced along the curve.
+        
+        If num_points is None, the function keeps the current number of points.
+        For a closed contour (not in drawing mode), the first point is appended again at the end for interpolation.
+        """
+        if len(self.contour_points) < 2:
+            return
+
+        # Use the current number of points if not specified.
+        if num_points is None:
+            num_points = len(self.contour_points)
+
+        # Convert the list of QPointF to separate x and y arrays.
+        x = np.array([p.x() for p in self.contour_points])
+        y = np.array([p.y() for p in self.contour_points])
+
+        # If the contour is closed (i.e. not in drawing mode), append the first point to the end.
+        if not self.drawing_mode:
+            x = np.append(x, x[0])
+            y = np.append(y, y[0])
+        
+        # Calculate the cumulative arc length along the contour.
+        # The first element is 0. Each subsequent element is the sum of distances so far.
+        distances = np.sqrt(np.diff(x)**2 + np.diff(y)**2)
+        cumulative_length = np.concatenate(([0], np.cumsum(distances)))
+        total_length = cumulative_length[-1]
+
+        # Generate uniformly spaced "target" distances along the total length.
+        target_lengths = np.linspace(0, total_length, num_points)
+        
+        # Interpolate new x and y coordinates for the given target distances.
+        new_x = np.interp(target_lengths, cumulative_length, x)
+        new_y = np.interp(target_lengths, cumulative_length, y)
+        
+        # Update the contour points with the new, uniformly spaced points.
+        self.contour_points = [QPointF(nx, ny) for nx, ny in zip(new_x, new_y)]
+
 
     def update_contour(self):
         """Update the displayed contour."""
@@ -152,6 +191,7 @@ class SnakeApp(QMainWindow):
 
             # Add the path to the scene with the specified pen
             self.contour_item = self.scene.addPath(path, pen)
+            self.resample_contour_points()
 
 
 
@@ -167,6 +207,7 @@ class SnakeApp(QMainWindow):
         alpha = self.alpha_slider.value() / 100.0
         beta = self.beta_slider.value() / 100.0
         gamma = self.gamma_slider.value() / 10.0
+        print(alpha, beta, gamma)
         max_iterations = self.iterations_slider.value()
 
         for iteration in range(max_iterations):
@@ -180,8 +221,8 @@ class SnakeApp(QMainWindow):
                 best_pos = p
 
                 # Check 3x3 neighborhood
-                for dx in [-1, 0, 1]:
-                    for dy in [-1, 0, 1]:
+                for dx in [-5,-4,-3,-2, -1, 0, 1, 2,3,4,5]:
+                    for dy in [-5,-4,-3,-2, -1, 0, 1, 2,3,4,5]:
                         cx, cy = int(p.x() + dx), int(p.y() + dy)
                         if not (0 <= cx < self.image.shape[1] and 0 <= cy < self.image.shape[0]):
                             continue
