@@ -28,10 +28,14 @@ class SnakeApp(QMainWindow):
         self.init_btn = QPushButton("Initialize Contour")
         self.reset_btn = QPushButton("Reset contour")
         self.evolve_btn = QPushButton("Evolve")
+        self.analyze_btn = QPushButton("Analyze Contour")
+        self.save_btn = QPushButton("Save Chain Code")
         self.load_btn.clicked.connect(self.load_image)
         self.init_btn.clicked.connect(self.toggle_drawing)
         self.reset_btn.clicked.connect(self.reset_contour)
         self.evolve_btn.clicked.connect(self.evolve_snake)
+        self.analyze_btn.clicked.connect(self.analyze_contour)
+        self.save_btn.clicked.connect(self.save_chain_code)
 
         self.alpha_slider = QSlider(Qt.Horizontal)
         self.beta_slider = QSlider(Qt.Horizontal)
@@ -50,6 +54,8 @@ class SnakeApp(QMainWindow):
         layout.addWidget(self.init_btn)
         layout.addWidget(self.reset_btn)
         layout.addWidget(self.evolve_btn)
+        layout.addWidget(self.analyze_btn)
+        layout.addWidget(self.save_btn)
         layout.addWidget(QLabel("Alpha (Elasticity)"))
         layout.addWidget(self.alpha_slider)
         layout.addWidget(QLabel("Beta (Stiffness)"))
@@ -59,11 +65,20 @@ class SnakeApp(QMainWindow):
         layout.addWidget(QLabel("Iterations"))
         layout.addWidget(self.iterations_slider)
 
+        # Labels for analysis results
+        self.perimeter_label = QLabel("Perimeter: ")
+        self.area_label = QLabel("Area: ")
+        self.chain_code_label = QLabel("Chain Code Length: ")
+        layout.addWidget(self.perimeter_label)
+        layout.addWidget(self.area_label)
+        layout.addWidget(self.chain_code_label)
+
         # State variables
         self.image = None
         self.E_ext = None
         self.contour_points = []
         self.drawing_mode = False
+        self.chain_code = []
 
     #     self.alpha_slider.valueChanged.connect(lambda: self.update_label(self.alpha_slider, self.alpha_label))
     #     self.beta_slider.valueChanged.connect(lambda: self.update_label(self.beta_slider, self.beta_label))
@@ -106,6 +121,10 @@ class SnakeApp(QMainWindow):
         self.scene.setSceneRect(0, 0, w, h)
         self.contour_points = []
         self.contour_item = None
+        self.chain_code = []
+        self.perimeter_label.setText("Perimeter: ")
+        self.area_label.setText("Area: ")
+        self.chain_code_label.setText("Chain Code Length: ")
 
     def mousePressEvent(self, event):
         """Handle mouse clicks to add contour points."""
@@ -220,7 +239,7 @@ class SnakeApp(QMainWindow):
                 min_energy = float('inf')
                 best_pos = p
 
-                # Check 3x3 neighborhood
+                # Check neighborhood
                 for dx in [-5,-4,-3,-2, -1, 0, 1, 2,3,4,5]:
                     for dy in [-5,-4,-3,-2, -1, 0, 1, 2,3,4,5]:
                         cx, cy = int(p.x() + dx), int(p.y() + dy)
@@ -247,6 +266,142 @@ class SnakeApp(QMainWindow):
             QApplication.processEvents()  # Keep GUI responsive
             if not moved:
                 break
+
+    def generate_chain_code(self):
+        """
+        Generate the 8-directional Freeman chain code for the contour.
+        
+        Direction coding:
+        3 2 1
+        4   0
+        5 6 7
+        """
+        if len(self.contour_points) < 2:
+            return []
+        
+        # Direction vectors for 8-directional chain code
+        dirs = [(1, 0), (1, -1), (0, -1), (-1, -1), 
+                (-1, 0), (-1, 1), (0, 1), (1, 1)]
+        
+        chain_code = []
+        
+        for i in range(len(self.contour_points)):
+            current = self.contour_points[i]
+            next_point = self.contour_points[(i + 1) % len(self.contour_points)]
+            
+            # Calculate difference vector
+            dx = int(next_point.x() - current.x())
+            dy = int(next_point.y() - current.y())
+            
+            # Find the closest direction
+            if dx == 0 and dy == 0:
+                continue  # Skip duplicate points
+                
+            # Normalize the direction vector for comparison
+            length = max(abs(dx), abs(dy))
+            dx_norm = dx / length
+            dy_norm = dy / length
+            
+            best_dir = 0
+            best_similarity = -float('inf')
+            
+            for dir_idx, (dir_x, dir_y) in enumerate(dirs):
+                # Calculate dot product as similarity measure
+                similarity = dx_norm * dir_x + dy_norm * dir_y
+                if similarity > best_similarity:
+                    best_similarity = similarity
+                    best_dir = dir_idx
+            
+            # For longer steps, repeat the direction
+            for _ in range(length):
+                chain_code.append(best_dir)
+        
+        return chain_code
+    
+    def calculate_perimeter(self):
+        """
+        Calculate the perimeter of the contour manually by summing the 
+        Euclidean distances between consecutive points.
+        """
+        if len(self.contour_points) < 2:
+            return 0
+            
+        perimeter = 0
+        for i in range(len(self.contour_points)):
+            current = self.contour_points[i]
+            next_point = self.contour_points[(i + 1) % len(self.contour_points)]
+            
+            # Calculate Euclidean distance between current and next point
+            dx = next_point.x() - current.x()
+            dy = next_point.y() - current.y()
+            distance = (dx**2 + dy**2)**0.5
+            
+            perimeter += distance
+            
+        return perimeter
+    
+    def calculate_area(self):
+        """
+        Calculate the area inside the contour using the Shoelace formula 
+        (Gauss's area formula).
+        
+        This formula computes the area of a simple polygon by using the 
+        coordinates of its vertices:
+        Area = 0.5 * |sum(x_i * y_{i+1} - x_{i+1} * y_i)|
+        """
+        if len(self.contour_points) < 3:
+            return 0
+            
+        # Extract x and y coordinates
+        x = [p.x() for p in self.contour_points]
+        y = [p.y() for p in self.contour_points]
+        
+        # Add the first point at the end to close the polygon
+        x.append(x[0])
+        y.append(y[0])
+        
+        # Apply the Shoelace formula
+        area = 0
+        for i in range(len(x) - 1):
+            area += (x[i] * y[i+1]) - (x[i+1] * y[i])
+        
+        # Take the absolute value and multiply by 0.5
+        area = abs(area) * 0.5
+        
+        return area
+    
+    def analyze_contour(self):
+        """Analyze the contour and update information labels."""
+        if not self.contour_points or len(self.contour_points) < 3:
+            QMessageBox.warning(self, "Warning", "Please initialize a valid contour first.")
+            return
+            
+        # Calculate perimeter
+        perimeter = self.calculate_perimeter()
+        
+        # Calculate area
+        area = self.calculate_area()
+        
+        # Generate chain code
+        self.chain_code = self.generate_chain_code()
+        
+        # Update labels
+        self.perimeter_label.setText(f"Perimeter: {perimeter:.2f} pixels")
+        self.area_label.setText(f"Area: {area:.2f} square pixels")
+        self.chain_code_label.setText(f"Chain Code Length: {len(self.chain_code)} elements")
+
+    def save_chain_code(self):
+        """Save the chain code to a file."""
+        if not self.chain_code:
+            QMessageBox.warning(self, "Warning", "Please analyze the contour first.")
+            return
+
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Chain Code", "", "Text Files (*.txt)")
+        if file_path:
+            with open(file_path, 'w') as f:
+                f.write(','.join(map(str, self.chain_code)))
+            QMessageBox.information(self, "Success", "Chain code saved successfully.")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
