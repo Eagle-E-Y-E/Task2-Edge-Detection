@@ -2,102 +2,90 @@ import sys
 import cv2
 import numpy as np
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QGraphicsView, QGraphicsScene, QMessageBox,
-                             QPushButton, QVBoxLayout, QWidget, QSlider, QLabel, QFileDialog)
-from PyQt5.QtGui import QPixmap, QImage, QPainterPath, QPen, QColor
+                             QPushButton, QVBoxLayout, QWidget, QSlider, QLabel, QFileDialog, )
+from PyQt5.QtGui import QPixmap, QImage, QPainterPath, QPen, QColor, QPainter
 from PyQt5.QtCore import QPointF, Qt
+from PyQt5 import uic
+from utils import load_pixmap_to_label
 
-class SnakeApp(QMainWindow):
+
+class App(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Active Contour Model with PyQt5")
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 1000, 00)
 
-        # Graphics setup
+        uic.loadUi("UI.ui", self)
+
         self.scene = QGraphicsScene(self)
         self.view = QGraphicsView(self.scene)
+        self.view.setRenderHint(QPainter.Antialiasing)
         self.contour_item = None
-
-        # Control panel
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
-        layout = QVBoxLayout(self.central_widget)
+        layout = QVBoxLayout(self.widget)
         layout.addWidget(self.view)
 
         # Buttons and sliders
         self.load_btn = QPushButton("Load Image")
-        self.init_btn = QPushButton("Initialize Contour")
-        self.reset_btn = QPushButton("Reset contour")
-        self.evolve_btn = QPushButton("Evolve")
-        self.analyze_btn = QPushButton("Analyze Contour")
-        self.save_btn = QPushButton("Save Chain Code")
         self.load_btn.clicked.connect(self.load_image)
+        layout.addWidget(self.load_btn)
+
         self.init_btn.clicked.connect(self.toggle_drawing)
         self.reset_btn.clicked.connect(self.reset_contour)
         self.evolve_btn.clicked.connect(self.evolve_snake)
-        self.analyze_btn.clicked.connect(self.analyze_contour)
+        # self.analyze_contour_btn.clicked.connect(self.analyze_contour)
         self.save_btn.clicked.connect(self.save_chain_code)
 
-        self.alpha_slider = QSlider(Qt.Horizontal)
-        self.beta_slider = QSlider(Qt.Horizontal)
-        self.gamma_slider = QSlider(Qt.Horizontal)
-        self.iterations_slider = QSlider(Qt.Horizontal)
-        self.alpha_slider.setRange(1, 1000)
-        self.beta_slider.setRange(1, 1000)
-        self.gamma_slider.setRange(1, 100)
-        self.iterations_slider.setRange(10, 1000)
-        self.alpha_slider.setValue(1)
-        self.beta_slider.setValue(1)
-        self.gamma_slider.setValue(10)
-        self.iterations_slider.setValue(200)
-
-        layout.addWidget(self.load_btn)
-        layout.addWidget(self.init_btn)
-        layout.addWidget(self.reset_btn)
-        layout.addWidget(self.evolve_btn)
-        layout.addWidget(self.analyze_btn)
-        layout.addWidget(self.save_btn)
-        layout.addWidget(QLabel("Alpha (Elasticity)"))
-        layout.addWidget(self.alpha_slider)
-        layout.addWidget(QLabel("Beta (Stiffness)"))
-        layout.addWidget(self.beta_slider)
-        layout.addWidget(QLabel("Gamma (External)"))
-        layout.addWidget(self.gamma_slider)
-        layout.addWidget(QLabel("Iterations"))
-        layout.addWidget(self.iterations_slider)
-
-        # Labels for analysis results
-        self.perimeter_label = QLabel("Perimeter: ")
-        self.area_label = QLabel("Area: ")
-        self.chain_code_label = QLabel("Chain Code Length: ")
-        layout.addWidget(self.perimeter_label)
-        layout.addWidget(self.area_label)
-        layout.addWidget(self.chain_code_label)
-
-        # State variables
         self.image = None
         self.E_ext = None
         self.contour_points = []
         self.drawing_mode = False
         self.chain_code = []
+        self.alpha_slider.setValue(1)
+        self.beta_slider.setValue(1)
+        self.gamma_slider.setValue(10)
+        self.iterations_slider.setValue(200)
+        self.update_label(self.alpha_slider, self.alpha_label)
+        self.update_label(self.beta_slider, self.beta_label)
+        self.update_label(self.gamma_slider, self.gamma_label)
+        self.update_label(self.iterations_slider, self.iterations_label)
 
-    #     self.alpha_slider.valueChanged.connect(lambda: self.update_label(self.alpha_slider, self.alpha_label))
-    #     self.beta_slider.valueChanged.connect(lambda: self.update_label(self.beta_slider, self.beta_label))
-    #     self.gamma_slider.valueChanged.connect(lambda: self.update_label(self.gamma_slider, self.gamma_label))
-    #     self.iterations_slider.valueChanged.connect(lambda: self.update_label(self.iterations_slider, self.iter_label))
+        self.alpha_slider.valueChanged.connect(
+            lambda: self.update_label(self.alpha_slider, self.alpha_label))
+        self.beta_slider.valueChanged.connect(
+            lambda: self.update_label(self.beta_slider, self.beta_label))
+        self.gamma_slider.valueChanged.connect(
+            lambda: self.update_label(self.gamma_slider, self.gamma_label))
+        self.iterations_slider.valueChanged.connect(
+            lambda: self.update_label(self.iterations_slider, self.iterations_label))
+        
+        ######################  Tab 2
 
-    # def update_label(self, slider, label):
-    #     label.setText(f"{slider.value()}")
+        
+        self.filter_input.mouseDoubleClickEvent = self.doubleClickHandler
+        # filter_output1 for edges
+        # filter_output2 for result
+        # filter_btn for applying canny
+
+        # slider1 , slider2 , slider3 if well use them
+
+    def doubleClickHandler(self, event):
+        load_pixmap_to_label(self.filter_input)
+
+    def update_label(self, slider, label):
+        label.setText(f"{slider.value()}")
 
     def load_image(self):
         """Load and process the image."""
-        file_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.jpeg *.bmp)")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Open Image", "", "Image Files (*.png *.jpg *.jpeg *.bmp)")
         if file_path:
             self.image = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
             if self.image is None:
                 QMessageBox.critical(self, "Error", "Could not load image.")
                 return
-        else: 
+        else:
             return
+
         # Compute external energy
         grad_x = cv2.Sobel(self.image, cv2.CV_64F, 1, 0, ksize=3)
         grad_y = cv2.Sobel(self.image, cv2.CV_64F, 0, 1, ksize=3)
@@ -110,7 +98,8 @@ class SnakeApp(QMainWindow):
     def toggle_drawing(self):
         """Toggle drawing mode."""
         self.drawing_mode = not self.drawing_mode
-        self.init_btn.setText("Stop Initializing" if self.drawing_mode else "Initialize Contour")
+        self.init_btn.setText(
+            "Stop Initializing" if self.drawing_mode else "Initialize Contour")
 
     def reset_contour(self):
         h, w = self.image.shape
@@ -119,32 +108,37 @@ class SnakeApp(QMainWindow):
         self.scene.clear()
         self.scene.addPixmap(pixmap)
         self.scene.setSceneRect(0, 0, w, h)
+        # Fit the image to the view
+        self.view.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
         self.contour_points = []
         self.contour_item = None
         self.chain_code = []
-        self.perimeter_label.setText("Perimeter: ")
-        self.area_label.setText("Area: ")
-        self.chain_code_label.setText("Chain Code Length: ")
 
     def mousePressEvent(self, event):
         """Handle mouse clicks to add contour points."""
         if self.drawing_mode and event.button() == Qt.LeftButton:
-            pos = self.view.mapToScene(event.pos())
+            pos = self.view.mapToScene(
+                self.view.mapFromGlobal(event.globalPos()))
             x2, y2 = int(pos.x()), int(pos.y())
             if 0 <= x2 < self.image.shape[1] and 0 <= y2 < self.image.shape[0]:
                 if len(self.contour_points) > 0:
-                    x1, y1 = self.contour_points[-1].x(), self.contour_points[-1].y()
+                    x1, y1 = self.contour_points[-1].x(
+                    ), self.contour_points[-1].y()
                     n = int(((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5) + 1
-                    print(n)
                     x_values = np.linspace(x1, x2, n)
                     y_values = np.linspace(y1, y2, n)
-                    qpoints = [QPointF(x, y) for x, y in zip(x_values, y_values)]
+                    qpoints = [QPointF(x, y)
+                               for x, y in zip(x_values, y_values)]
                     self.contour_points += qpoints
                     self.last_points = len(qpoints)
                 else:
                     self.contour_points.append(QPointF(x2, y2))
                     self.last_points = 1
-        
+
+        if event.button() == Qt.MiddleButton and self.contour_points:
+            self.contour_points = self.contour_points[:-self.last_points]
+        self.update_contour()
+
         if event.button() == Qt.MiddleButton and self.contour_points:
             self.contour_points = self.contour_points[:-self.last_points]
         self.update_contour()
@@ -152,7 +146,7 @@ class SnakeApp(QMainWindow):
     def resample_contour_points(self, num_points=None):
         """
         Resample the contour points so that they are uniformly spaced along the curve.
-        
+
         If num_points is None, the function keeps the current number of points.
         For a closed contour (not in drawing mode), the first point is appended again at the end for interpolation.
         """
@@ -171,7 +165,7 @@ class SnakeApp(QMainWindow):
         if not self.drawing_mode:
             x = np.append(x, x[0])
             y = np.append(y, y[0])
-        
+
         # Calculate the cumulative arc length along the contour.
         # The first element is 0. Each subsequent element is the sum of distances so far.
         distances = np.sqrt(np.diff(x)**2 + np.diff(y)**2)
@@ -180,14 +174,13 @@ class SnakeApp(QMainWindow):
 
         # Generate uniformly spaced "target" distances along the total length.
         target_lengths = np.linspace(0, total_length, num_points)
-        
+
         # Interpolate new x and y coordinates for the given target distances.
         new_x = np.interp(target_lengths, cumulative_length, x)
         new_y = np.interp(target_lengths, cumulative_length, y)
-        
+
         # Update the contour points with the new, uniformly spaced points.
         self.contour_points = [QPointF(nx, ny) for nx, ny in zip(new_x, new_y)]
-
 
     def update_contour(self):
         """Update the displayed contour."""
@@ -211,8 +204,6 @@ class SnakeApp(QMainWindow):
             # Add the path to the scene with the specified pen
             self.contour_item = self.scene.addPath(path, pen)
             self.resample_contour_points()
-
-
 
     def evolve_snake(self):
         """Evolve the contour using the greedy algorithm."""
@@ -240,8 +231,8 @@ class SnakeApp(QMainWindow):
                 best_pos = p
 
                 # Check neighborhood
-                for dx in [-5,-4,-3,-2, -1, 0, 1, 2,3,4,5]:
-                    for dy in [-5,-4,-3,-2, -1, 0, 1, 2,3,4,5]:
+                for dx in [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]:
+                    for dy in [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]:
                         cx, cy = int(p.x() + dx), int(p.y() + dy)
                         if not (0 <= cx < self.image.shape[1] and 0 <= cy < self.image.shape[0]):
                             continue
@@ -266,11 +257,13 @@ class SnakeApp(QMainWindow):
             QApplication.processEvents()  # Keep GUI responsive
             if not moved:
                 break
+        print("Finished after", iteration, "iterations")
+        self.analyze_contour()
 
     def generate_chain_code(self):
         """
         Generate the 8-directional Freeman chain code for the contour.
-        
+
         Direction coding:
         3 2 1
         4   0
@@ -278,46 +271,47 @@ class SnakeApp(QMainWindow):
         """
         if len(self.contour_points) < 2:
             return []
-        
+
         # Direction vectors for 8-directional chain code
-        dirs = [(1, 0), (1, -1), (0, -1), (-1, -1), 
+        dirs = [(1, 0), (1, -1), (0, -1), (-1, -1),
                 (-1, 0), (-1, 1), (0, 1), (1, 1)]
-        
+
         chain_code = []
-        
+
         for i in range(len(self.contour_points)):
             current = self.contour_points[i]
-            next_point = self.contour_points[(i + 1) % len(self.contour_points)]
-            
+            next_point = self.contour_points[(
+                i + 1) % len(self.contour_points)]
+
             # Calculate difference vector
             dx = int(next_point.x() - current.x())
             dy = int(next_point.y() - current.y())
-            
+
             # Find the closest direction
             if dx == 0 and dy == 0:
                 continue  # Skip duplicate points
-                
+
             # Normalize the direction vector for comparison
             length = max(abs(dx), abs(dy))
             dx_norm = dx / length
             dy_norm = dy / length
-            
+
             best_dir = 0
             best_similarity = -float('inf')
-            
+
             for dir_idx, (dir_x, dir_y) in enumerate(dirs):
                 # Calculate dot product as similarity measure
                 similarity = dx_norm * dir_x + dy_norm * dir_y
                 if similarity > best_similarity:
                     best_similarity = similarity
                     best_dir = dir_idx
-            
+
             # For longer steps, repeat the direction
             for _ in range(length):
                 chain_code.append(best_dir)
-        
+
         return chain_code
-    
+
     def calculate_perimeter(self):
         """
         Calculate the perimeter of the contour manually by summing the 
@@ -325,86 +319,94 @@ class SnakeApp(QMainWindow):
         """
         if len(self.contour_points) < 2:
             return 0
-            
+
         perimeter = 0
         for i in range(len(self.contour_points)):
             current = self.contour_points[i]
-            next_point = self.contour_points[(i + 1) % len(self.contour_points)]
-            
+            next_point = self.contour_points[(
+                i + 1) % len(self.contour_points)]
+
             # Calculate Euclidean distance between current and next point
             dx = next_point.x() - current.x()
             dy = next_point.y() - current.y()
             distance = (dx**2 + dy**2)**0.5
-            
+
             perimeter += distance
-            
+
         return perimeter
-    
+
     def calculate_area(self):
         """
         Calculate the area inside the contour using the Shoelace formula 
         (Gauss's area formula).
-        
+
         This formula computes the area of a simple polygon by using the 
         coordinates of its vertices:
         Area = 0.5 * |sum(x_i * y_{i+1} - x_{i+1} * y_i)|
         """
         if len(self.contour_points) < 3:
             return 0
-            
+
         # Extract x and y coordinates
         x = [p.x() for p in self.contour_points]
         y = [p.y() for p in self.contour_points]
-        
+
         # Add the first point at the end to close the polygon
         x.append(x[0])
         y.append(y[0])
-        
+
         # Apply the Shoelace formula
         area = 0
         for i in range(len(x) - 1):
             area += (x[i] * y[i+1]) - (x[i+1] * y[i])
-        
+
         # Take the absolute value and multiply by 0.5
         area = abs(area) * 0.5
-        
+
         return area
-    
+
     def analyze_contour(self):
         """Analyze the contour and update information labels."""
         if not self.contour_points or len(self.contour_points) < 3:
-            QMessageBox.warning(self, "Warning", "Please initialize a valid contour first.")
+            QMessageBox.warning(
+                self, "Warning", "Please initialize a valid contour first.")
             return
-            
+
         # Calculate perimeter
         perimeter = self.calculate_perimeter()
-        
+
         # Calculate area
         area = self.calculate_area()
-        
+
         # Generate chain code
         self.chain_code = self.generate_chain_code()
-        
+
+        print("Perimeter:", perimeter)
+
         # Update labels
         self.perimeter_label.setText(f"Perimeter: {perimeter:.2f} pixels")
         self.area_label.setText(f"Area: {area:.2f} square pixels")
-        self.chain_code_label.setText(f"Chain Code Length: {len(self.chain_code)} elements")
+        self.chain_code_label.setText(
+            f"Chain Code Length: {len(self.chain_code)} elements")
 
     def save_chain_code(self):
         """Save the chain code to a file."""
         if not self.chain_code:
-            QMessageBox.warning(self, "Warning", "Please analyze the contour first.")
+            QMessageBox.warning(
+                self, "Warning", "Please analyze the contour first.")
             return
 
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Chain Code", "", "Text Files (*.txt)")
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, "Save Chain Code", "", "Text Files (*.txt)")
         if file_path:
             with open(file_path, 'w') as f:
                 f.write(','.join(map(str, self.chain_code)))
-            QMessageBox.information(self, "Success", "Chain code saved successfully.")
+            QMessageBox.information(
+                self, "Success", "Chain code saved successfully.")
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = SnakeApp()
+    window = App()
     window.show()
     sys.exit(app.exec_())
