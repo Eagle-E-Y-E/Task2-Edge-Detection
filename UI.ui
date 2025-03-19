@@ -374,7 +374,7 @@ QScrollBar::right-arrow:horizontal {
        <string notr="true">color: rgb(255, 255, 255);</string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -761,6 +761,9 @@ border-color: rgb(0, 0, 127);</string>
                 </property>
                 <property name="text">
                  <string>double click to import</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
                 </property>
                </widget>
               </item>
