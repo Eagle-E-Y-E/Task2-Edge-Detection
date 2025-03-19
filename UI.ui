@@ -374,7 +374,7 @@ QScrollBar::right-arrow:horizontal {
        <string notr="true">color: rgb(255, 255, 255);</string>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -766,6 +766,12 @@ border-color: rgb(0, 0, 127);</string>
               </item>
               <item>
                <widget class="QGraphicsView" name="filter_output1">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
@@ -782,6 +788,12 @@ border-color: rgb(0, 0, 127);</string>
               </item>
               <item>
                <widget class="QGraphicsView" name="filter_output2">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
