@@ -276,13 +276,14 @@ class App(QMainWindow):
         print(alpha, beta, gamma)
         max_iterations = self.iterations_slider.value()
         window_lookUP = {
-            '3': [-1, 0, 1],
-            '5': [-2, -1, 0, 1, 2],
-            '7': [-3, -2, -1, 0, 1, 2, 3],
-            '9': [-4, -3, -2, -1, 0, 1, 2, 3, 4],
-            '11': [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5],
-            '13' : [-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6]
+            3: [-1, 0, 1],
+            5: [-2, -1, 0, 1, 2],
+            7: [-3, -2, -1, 0, 1, 2, 3],
+            9: [-4, -3, -2, -1, 0, 1, 2, 3, 4],
+            11: [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5],
+            13 : [-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6]
         }
+        window_size = self.window_size_slider.value()
 
         for iteration in range(max_iterations):
             moved = False
@@ -295,8 +296,8 @@ class App(QMainWindow):
                 best_pos = p
 
                 # Check neighborhood
-                for dx in [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]:
-                    for dy in [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]:
+                for dx in window_lookUP[window_size]:
+                    for dy in window_lookUP[window_size]:
                         cx, cy = int(p.x() + dx), int(p.y() + dy)
                         if not (0 <= cx < self.image.shape[1] and 0 <= cy < self.image.shape[0]):
                             continue
