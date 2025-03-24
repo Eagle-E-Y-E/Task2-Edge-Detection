@@ -289,13 +289,13 @@ class App(QMainWindow):
                         if not (0 <= cx < self.image.shape[1] and 0 <= cy < self.image.shape[0]):
                             continue
                         candidate = QPointF(cx, cy)
-                        # Elasticity
+                        # Elasticity: Encourages the snake to remain connected smoothly.
                         elast = ((cx - prev.x()) ** 2 + (cy - prev.y()) ** 2 +
                                  (next.x() - cx) ** 2 + (next.y() - cy) ** 2)
-                        # Stiffness
+                        # Stiffness: Promotes smoothness and penalizes abrupt changes
                         stiff = ((prev.x() - 2 * cx + next.x()) ** 2 +
                                  (prev.y() - 2 * cy + next.y()) ** 2)
-                        # External energy
+                        # External energy: Pulls the snake toward edges
                         e_ext = self.E_ext[cy, cx]
                         energy = alpha * elast + beta * stiff + gamma * e_ext
                         if energy < min_energy:
