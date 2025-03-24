@@ -25,12 +25,32 @@ def load_pixmap_to_label(label: QLabel):
         label.setPixmap(scaled_pixmap)
         label.setAlignment(Qt.AlignCenter)
 
-def display_image_Graphics_scene(self, view, image):
-        pixmap = self.convert_cv_to_pixmap(image)
+def display_image_Graphics_scene( view, image):
+        pixmap = convert_cv_to_pixmap(image)
         scene = QGraphicsScene()
         scene.addPixmap(pixmap)
         view.setScene(scene)
         view.fitInView(
             scene.itemsBoundingRect(), Qt.KeepAspectRatio)
+        
+def convert_cv_to_pixmap( cv_img):
+    """Convert an OpenCV image to QPixmap"""
+    if len(cv_img.shape) == 2:  # Grayscale image
+        height, width = cv_img.shape
+        bytesPerLine = width
+        qImg = QImage(cv_img.data, width, height, bytesPerLine, QImage.Format_Grayscale8)
+    else:  # Color image
+        height, width, channels = cv_img.shape
+        bytesPerLine = channels * width
+        qImg = QImage(cv_img.data, width, height, bytesPerLine, QImage.Format_RGB888).rgbSwapped()
+    
+    return QPixmap.fromImage(qImg)
+
+
+## usage
+
+## # Display the edge image in filteroutput1
+##    self.display_image_to_graphics_view(self.filteroutput1, edges)
+##    edges should be the image returned from the canny function
 
     
