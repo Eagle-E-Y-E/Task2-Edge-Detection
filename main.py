@@ -63,7 +63,7 @@ class App(QMainWindow):
         self.iterations_slider.valueChanged.connect(
             lambda: self.update_label(self.iterations_slider, self.iterations_label))
         self.window_size_slider.valueChanged.connect(
-            lambda: self.update_label(self.window_size_slider, self.window_size_label))
+            lambda: self.winow_size_label.setText(f"{self.window_size_slider.value()}"))
 
         ######################  Tab 2
 
