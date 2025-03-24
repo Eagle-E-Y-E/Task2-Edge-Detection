@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>868</width>
-    <height>681</height>
+    <height>755</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -378,7 +378,7 @@ QScrollBar::right-arrow:horizontal {
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
-        <string>Tab 1</string>
+        <string>Active Contour</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
@@ -449,7 +449,7 @@ border-color: rgb(0, 0, 127);</string>
                <height>16777215</height>
               </size>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_5">
+             <layout class="QVBoxLayout" name="verticalLayout_3">
               <item>
                <widget class="QLabel" name="label_alpha">
                 <property name="text">
@@ -553,13 +553,13 @@ border-color: rgb(0, 0, 127);</string>
                  <item>
                   <widget class="QSlider" name="gamma_slider">
                    <property name="minimum">
-                    <number>10</number>
+                    <number>1</number>
                    </property>
                    <property name="maximum">
-                    <number>1000</number>
+                    <number>100</number>
                    </property>
                    <property name="value">
-                    <number>100</number>
+                    <number>10</number>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -612,6 +612,75 @@ border-color: rgb(0, 0, 127);</string>
                   <widget class="QLabel" name="iterations_label">
                    <property name="text">
                     <string>0</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string>window size</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="frame_13">
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QHBoxLayout" name="horizontalLayout_15">
+                 <item>
+                  <widget class="QSlider" name="window_size_slider">
+                   <property name="mouseTracking">
+                    <bool>false</bool>
+                   </property>
+                   <property name="minimum">
+                    <number>3</number>
+                   </property>
+                   <property name="maximum">
+                    <number>13</number>
+                   </property>
+                   <property name="singleStep">
+                    <number>2</number>
+                   </property>
+                   <property name="pageStep">
+                    <number>3</number>
+                   </property>
+                   <property name="value">
+                    <number>3</number>
+                   </property>
+                   <property name="sliderPosition">
+                    <number>3</number>
+                   </property>
+                   <property name="tracking">
+                    <bool>true</bool>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="invertedAppearance">
+                    <bool>false</bool>
+                   </property>
+                   <property name="invertedControls">
+                    <bool>false</bool>
+                   </property>
+                   <property name="tickPosition">
+                    <enum>QSlider::NoTicks</enum>
+                   </property>
+                   <property name="tickInterval">
+                    <number>4</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="window_size_label">
+                   <property name="text">
+                    <string>3</string>
                    </property>
                   </widget>
                  </item>
@@ -721,7 +790,7 @@ border-color: rgb(0, 0, 127);</string>
       </widget>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
-        <string>Tab 2</string>
+        <string>Canny Edge Detection</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout">
         <item row="1" column="0">

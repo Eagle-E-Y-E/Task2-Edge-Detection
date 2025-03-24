@@ -48,6 +48,7 @@ class App(QMainWindow):
         self.beta_slider.setValue(1)
         self.gamma_slider.setValue(10)
         self.iterations_slider.setValue(200)
+        self.window_size_slider.setValue(3)
         self.update_label(self.alpha_slider, self.alpha_label)
         self.update_label(self.beta_slider, self.beta_label)
         self.update_label(self.gamma_slider, self.gamma_label)
@@ -61,6 +62,8 @@ class App(QMainWindow):
             lambda: self.update_label(self.gamma_slider, self.gamma_label))
         self.iterations_slider.valueChanged.connect(
             lambda: self.update_label(self.iterations_slider, self.iterations_label))
+        # self.window_size_slider.valueChanged.connect(
+        #     lambda: self.winow_size_label.setText(f"{self.window_size_slider.value()}"))
 
         ######################  Tab 2
 
@@ -74,6 +77,14 @@ class App(QMainWindow):
             lambda: self.alpha_2_label.setText(f"{self.slider1.value()/100}"))
         self.slider2.valueChanged.connect(
             lambda: self.beta_2_label.setText(f"{self.slider2.value()/100}"))
+        self.window_size_slider.valueChanged.connect(self.adjust_to_odd_value)
+
+    def adjust_to_odd_value(self):
+        value = self.window_size_slider.value()
+        if value % 2 == 0:
+            self.window_size_slider.setValue(value + 1 if value < self.window_size_slider.maximum() else value - 1)
+        self.window_size_label.setText(f"{self.window_size_slider.value()}")
+
 
     def doubleClickHandler(self, event):
         self.img_path = load_pixmap_to_label(self.filter_input)
@@ -271,6 +282,15 @@ class App(QMainWindow):
         gamma = self.gamma_slider.value() / 100.0
         print(alpha, beta, gamma)
         max_iterations = self.iterations_slider.value()
+        window_lookUP = {
+            3: [-1, 0, 1],
+            5: [-2, -1, 0, 1, 2],
+            7: [-3, -2, -1, 0, 1, 2, 3],
+            9: [-4, -3, -2, -1, 0, 1, 2, 3, 4],
+            11: [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5],
+            13 : [-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6]
+        }
+        window_size = self.window_size_slider.value()
 
         for iteration in range(max_iterations):
             moved = False
@@ -283,8 +303,8 @@ class App(QMainWindow):
                 best_pos = p
 
                 # Check neighborhood
-                for dx in [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]:
-                    for dy in [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]:
+                for dx in window_lookUP[window_size]:
+                    for dy in window_lookUP[window_size]:
                         cx, cy = int(p.x() + dx), int(p.y() + dy)
                         if not (0 <= cx < self.image.shape[1] and 0 <= cy < self.image.shape[0]):
                             continue
