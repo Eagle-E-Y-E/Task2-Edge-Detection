@@ -6,12 +6,15 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QGraphicsView, QGraphics
 from PyQt5.QtGui import QPixmap, QImage, QPainterPath, QPen, QColor, QPainter
 from PyQt5.QtCore import QPointF, Qt
 from PyQt5 import uic
-from utils import load_pixmap_to_label
+
+from Canny import Canny
+from utils import load_pixmap_to_label, display_image_Graphics_scene
 
 
 class App(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.filter_input = None
         self.setWindowTitle("Active Contour Model with PyQt5")
         self.setGeometry(100, 100, 1000, 00)
 
@@ -34,6 +37,7 @@ class App(QMainWindow):
         self.evolve_btn.clicked.connect(self.evolve_snake)
         # self.analyze_contour_btn.clicked.connect(self.analyze_contour)
         self.save_btn.clicked.connect(self.save_chain_code)
+        self.filter_btn.clicked.connect(self.canny_detection)
 
         self.image = None
         self.E_ext = None
@@ -57,10 +61,9 @@ class App(QMainWindow):
             lambda: self.update_label(self.gamma_slider, self.gamma_label))
         self.iterations_slider.valueChanged.connect(
             lambda: self.update_label(self.iterations_slider, self.iterations_label))
-        
+
         ######################  Tab 2
 
-        
         self.filter_input.mouseDoubleClickEvent = self.doubleClickHandler
         # filter_output1 for edges
         # filter_output2 for result
@@ -69,7 +72,7 @@ class App(QMainWindow):
         # slider1 , slider2 , slider3 if well use them
 
     def doubleClickHandler(self, event):
-        load_pixmap_to_label(self.filter_input)
+        self.img_path = load_pixmap_to_label(self.filter_input)
 
     def update_label(self, slider, label):
         label.setText(f"{slider.value()}")
@@ -87,10 +90,12 @@ class App(QMainWindow):
             return
 
         # Compute external energy
-        grad_x = cv2.Sobel(self.image, cv2.CV_64F, 1, 0, ksize=3)
-        grad_y = cv2.Sobel(self.image, cv2.CV_64F, 0, 1, ksize=3)
-        grad_mag = np.sqrt(grad_x**2 + grad_y**2)
-        self.E_ext = -grad_mag**2
+        sobel_operator = Canny()
+        grad_x, grad_y = sobel_operator.sobel_kernel(self.image)
+        # grad_x = cv2.Sobel(self.image, cv2.CV_64F, 1, 0, ksize=3)
+        # # grad_y = cv2.Sobel(self.image, cv2.CV_64F, 0, 1, ksize=3)
+        grad_mag = np.sqrt(grad_x ** 2 + grad_y ** 2)
+        self.E_ext = -grad_mag ** 2
 
         # Display image
         self.reset_contour()
@@ -168,7 +173,7 @@ class App(QMainWindow):
 
         # Calculate the cumulative arc length along the contour.
         # The first element is 0. Each subsequent element is the sum of distances so far.
-        distances = np.sqrt(np.diff(x)**2 + np.diff(y)**2)
+        distances = np.sqrt(np.diff(x) ** 2 + np.diff(y) ** 2)
         cumulative_length = np.concatenate(([0], np.cumsum(distances)))
         total_length = cumulative_length[-1]
 
@@ -238,11 +243,11 @@ class App(QMainWindow):
                             continue
                         candidate = QPointF(cx, cy)
                         # Elasticity
-                        elast = ((cx - prev.x())**2 + (cy - prev.y())**2 +
-                                 (next.x() - cx)**2 + (next.y() - cy)**2)
+                        elast = ((cx - prev.x()) ** 2 + (cy - prev.y()) ** 2 +
+                                 (next.x() - cx) ** 2 + (next.y() - cy) ** 2)
                         # Stiffness
-                        stiff = ((prev.x() - 2*cx + next.x())**2 +
-                                 (prev.y() - 2*cy + next.y())**2)
+                        stiff = ((prev.x() - 2 * cx + next.x()) ** 2 +
+                                 (prev.y() - 2 * cy + next.y()) ** 2)
                         # External energy
                         e_ext = self.E_ext[cy, cx]
                         energy = alpha * elast + beta * stiff + gamma * e_ext
@@ -281,7 +286,7 @@ class App(QMainWindow):
         for i in range(len(self.contour_points)):
             current = self.contour_points[i]
             next_point = self.contour_points[(
-                i + 1) % len(self.contour_points)]
+                                                     i + 1) % len(self.contour_points)]
 
             # Calculate difference vector
             dx = int(next_point.x() - current.x())
@@ -324,12 +329,12 @@ class App(QMainWindow):
         for i in range(len(self.contour_points)):
             current = self.contour_points[i]
             next_point = self.contour_points[(
-                i + 1) % len(self.contour_points)]
+                                                     i + 1) % len(self.contour_points)]
 
             # Calculate Euclidean distance between current and next point
             dx = next_point.x() - current.x()
             dy = next_point.y() - current.y()
-            distance = (dx**2 + dy**2)**0.5
+            distance = (dx ** 2 + dy ** 2) ** 0.5
 
             perimeter += distance
 
@@ -358,7 +363,7 @@ class App(QMainWindow):
         # Apply the Shoelace formula
         area = 0
         for i in range(len(x) - 1):
-            area += (x[i] * y[i+1]) - (x[i+1] * y[i])
+            area += (x[i] * y[i + 1]) - (x[i + 1] * y[i])
 
         # Take the absolute value and multiply by 0.5
         area = abs(area) * 0.5
@@ -403,6 +408,16 @@ class App(QMainWindow):
                 f.write(','.join(map(str, self.chain_code)))
             QMessageBox.information(
                 self, "Success", "Chain code saved successfully.")
+
+    def canny_detection(self):
+        canny_detector = Canny()
+        print(self.slider1.value())
+        print(self.slider2.value())
+        canny_detector.weak_para = self.slider1.value() / 100
+        canny_detector.strong_para = self.slider2.value() / 100
+        final_edges, marked_image = canny_detector.canny_detection(self.img_path)
+        display_image_Graphics_scene(self.filter_output1, final_edges)
+        display_image_Graphics_scene(self.filter_output2, marked_image)
 
 
 if __name__ == "__main__":

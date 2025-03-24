@@ -4,6 +4,8 @@ import numpy as np
 
 class Canny:
     def __init__(self):
+        self.strong_para = None
+        self.weak_para = None
         self.image = None
 
     def gaussian_kernel(self, size, sigma):
@@ -51,8 +53,8 @@ class Canny:
 
     def suppress(self, img):
         gradient_mag, gradient_angle = self.calc_gradient(img)
-        weak_threshold = gradient_mag.max() * 0.4
-        strong_threshold = gradient_mag.max() * 0.8
+        weak_threshold = gradient_mag.max() * self.weak_para
+        strong_threshold = gradient_mag.max() * self.strong_para
         height, width = img.shape[0], img.shape[1]
         for x in range(width):
             for y in range(height):
@@ -97,25 +99,47 @@ class Canny:
         gradient_mag, weak_threshold, strong_threshold = self.suppress(img)
         height, width = img.shape[0], img.shape[1]
 
-        for x in range(width):
-            for y in range(height):
+        weak_edge = 75
+        STRONG = 255
+
+        for y in range(height):
+            for x in range(width):
                 if gradient_mag[y, x] < weak_threshold:
                     gradient_mag[y, x] = 0
                 elif strong_threshold > gradient_mag[y, x] >= weak_threshold:
-                    pass
+                    gradient_mag[y, x] = weak_edge
+                else:
+                    gradient_mag[y, x] = STRONG
 
         return gradient_mag
 
-    def canny_detection(self):
-        img = cv2.imread('ED-image1_gray.png', cv2.IMREAD_GRAYSCALE)
-        color_img = cv2.imread('ED-image1_gray.png')
-        gradient_mag = self.double_thresh(img)
-        for y in range(gradient_mag.shape[0]):
-            for x in range(gradient_mag.shape[1]):
-                if gradient_mag[y, x] > 0:
+    def hysteresis(self, img):
+        height, width = img.shape
+        weak_edge = 75
+        strong_edge = 255
+
+        for y in range(1, height - 1):
+            for x in range(1, width - 1):
+                if img[y, x] == weak_edge:
+                    if (img[y + 1, x - 1] == strong_edge or img[y + 1, x] == strong_edge or img[y + 1, x + 1] == strong_edge
+                            or img[y, x - 1] == strong_edge or img[y, x + 1] == strong_edge
+                            or img[y - 1, x - 1] == strong_edge or img[y - 1, x] == strong_edge or img[y - 1, x + 1] == strong_edge):
+                        img[y, x] = strong_edge
+                    else:
+                        img[y, x] = 0
+        return img
+
+    def canny_detection(self, img):
+        gray_image = cv2.imread(img, cv2.IMREAD_GRAYSCALE)
+        color_img = cv2.imread(img)
+
+        gradient_mag = self.double_thresh(gray_image)
+        final_edges = self.hysteresis(gradient_mag)
+
+        for y in range(final_edges.shape[0]):
+            for x in range(final_edges.shape[1]):
+                if final_edges[y, x] > 0:
                     color_img[y, x] = [0, 0, 255]
-        return color_img
 
+        return final_edges, color_img
 
-canny_detector = Canny()
-cv2.imwrite('Canny_canny.jpg', canny_detector.canny_detection())
