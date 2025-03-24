@@ -48,6 +48,7 @@ class App(QMainWindow):
         self.beta_slider.setValue(1)
         self.gamma_slider.setValue(10)
         self.iterations_slider.setValue(200)
+        self.window_size_slider.setValue(3)
         self.update_label(self.alpha_slider, self.alpha_label)
         self.update_label(self.beta_slider, self.beta_label)
         self.update_label(self.gamma_slider, self.gamma_label)
@@ -61,6 +62,8 @@ class App(QMainWindow):
             lambda: self.update_label(self.gamma_slider, self.gamma_label))
         self.iterations_slider.valueChanged.connect(
             lambda: self.update_label(self.iterations_slider, self.iterations_label))
+        self.window_size_slider.valueChanged.connect(
+            lambda: self.update_label(self.window_size_slider, self.window_size_label))
 
         ######################  Tab 2
 
@@ -74,6 +77,7 @@ class App(QMainWindow):
             lambda: self.alpha_2_label.setText(f"{self.slider1.value()/100}"))
         self.slider2.valueChanged.connect(
             lambda: self.beta_2_label.setText(f"{self.slider2.value()/100}"))
+        
 
     def doubleClickHandler(self, event):
         self.img_path = load_pixmap_to_label(self.filter_input)
