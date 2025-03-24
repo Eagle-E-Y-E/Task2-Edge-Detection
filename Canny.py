@@ -107,8 +107,8 @@ class Canny:
         return gradient_mag
 
     def canny_detection(self):
-        img = cv2.imread('Coins.jpg', cv2.IMREAD_GRAYSCALE)
-        color_img = cv2.imread('Coins.jpg')
+        img = cv2.imread('ED-image1_gray.png', cv2.IMREAD_GRAYSCALE)
+        color_img = cv2.imread('ED-image1_gray.png')
         gradient_mag = self.double_thresh(img)
         for y in range(gradient_mag.shape[0]):
             for x in range(gradient_mag.shape[1]):
