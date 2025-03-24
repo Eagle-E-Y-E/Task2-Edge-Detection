@@ -70,6 +70,10 @@ class App(QMainWindow):
         # filter_btn for applying canny
 
         # slider1 , slider2 , slider3 if well use them
+        self.slider1.valueChanged.connect(
+            lambda: self.alpha_2_label.setText(f"{self.slider1.value()/100}"))
+        self.slider2.valueChanged.connect(
+            lambda: self.beta_2_label.setText(f"{self.slider2.value()/100}"))
 
     def doubleClickHandler(self, event):
         self.img_path = load_pixmap_to_label(self.filter_input)
