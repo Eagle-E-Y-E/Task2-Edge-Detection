@@ -271,6 +271,14 @@ class App(QMainWindow):
         gamma = self.gamma_slider.value() / 10.0
         print(alpha, beta, gamma)
         max_iterations = self.iterations_slider.value()
+        window_lookUP = {
+            '3': [-1, 0, 1],
+            '5': [-2, -1, 0, 1, 2],
+            '7': [-3, -2, -1, 0, 1, 2, 3],
+            '9': [-4, -3, -2, -1, 0, 1, 2, 3, 4],
+            '11': [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5],
+            '13' : [-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6]
+        }
 
         for iteration in range(max_iterations):
             moved = False
