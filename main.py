@@ -15,7 +15,7 @@ class App(QMainWindow):
     def __init__(self):
         super().__init__()
         self.filter_input = None
-        self.setWindowTitle("Active Contour Model with PyQt5")
+        self.setWindowTitle("Active Contour Model")
         self.setGeometry(100, 100, 1000, 00)
 
         uic.loadUi("UI.ui", self)
@@ -79,7 +79,7 @@ class App(QMainWindow):
         self.img_path = load_pixmap_to_label(self.filter_input)
 
     def update_label(self, slider, label):
-        label.setText(f"{slider.value()}")
+        label.setText(f"{slider.value() / 100}")
 
     def sobel_manual(self, image):
         """
@@ -268,7 +268,7 @@ class App(QMainWindow):
         self.drawing_mode = False
         alpha = self.alpha_slider.value() / 100.0
         beta = self.beta_slider.value() / 100.0
-        gamma = self.gamma_slider.value() / 10.0
+        gamma = self.gamma_slider.value() / 100.0
         print(alpha, beta, gamma)
         max_iterations = self.iterations_slider.value()
         window_lookUP = {
