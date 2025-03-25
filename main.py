@@ -135,6 +135,7 @@ class App(QMainWindow):
                 grad_y[i, j] = np.sum(region * kernel_y)
         
         return grad_x, grad_y
+        
 
     def load_image(self):
         """Load and process the image."""
@@ -149,6 +150,7 @@ class App(QMainWindow):
             return
 
         # Compute gradients using the manually implemented sobel operator.
+        self.image = cv2.blur(self.image, (3, 3))
         grad_x, grad_y = self.sobel_manual(self.image)
         # Compute gradient magnitude.
         grad_mag = np.sqrt(grad_x ** 2 + grad_y ** 2)
@@ -223,7 +225,7 @@ class App(QMainWindow):
         x = np.array([p.x() for p in self.contour_points])
         y = np.array([p.y() for p in self.contour_points])
 
-        # If the contour is closed (i.e. not in drawing mode), append the first point to the end.
+        # ensure the contour is closed
         if not self.drawing_mode:
             x = np.append(x, x[0])
             y = np.append(y, y[0])
@@ -237,37 +239,32 @@ class App(QMainWindow):
         # Generate uniformly spaced "target" distances along the total length.
         target_lengths = np.linspace(0, total_length, num_points)
 
-        # Interpolate new x and y coordinates for the given target distances.
         new_x = np.interp(target_lengths, cumulative_length, x)
         new_y = np.interp(target_lengths, cumulative_length, y)
 
-        # Update the contour points with the new, uniformly spaced points.
         self.contour_points = [QPointF(nx, ny) for nx, ny in zip(new_x, new_y)]
 
     def update_contour(self):
-        """Update the displayed contour."""
         if self.contour_item:
             self.scene.removeItem(self.contour_item)
         if len(self.contour_points) > 1:
-            # Create a QPainterPath
             path = QPainterPath()
             path.moveTo(self.contour_points[0])
             for p in self.contour_points[1:]:
                 path.lineTo(p)
 
-            # Close the contour if initialized
+            # Close the contour
             if not self.drawing_mode and self.contour_points:
                 path.closeSubpath()
 
             pen = QPen(QColor("red"))
-            pen.setWidth(2) 
+            pen.setWidth(2)  
 
-            # Add the path to the scene with the specified pen
             self.contour_item = self.scene.addPath(path, pen)
             self.resample_contour_points()
 
     def evolve_snake(self):
-        """Evolve the contour using the greedy algorithm."""
+        """the greedy algorithm."""
         if not self.contour_points or self.drawing_mode:
             return
         if self.image is None:
@@ -278,7 +275,7 @@ class App(QMainWindow):
         alpha = self.alpha_slider.value() / 100.0
         beta = self.beta_slider.value() / 100.0
         gamma = self.gamma_slider.value() / 100.0
-        print(alpha, beta, gamma)
+        # print(alpha, beta, gamma)
         max_iterations = self.iterations_slider.value()
         window_lookUP = {
             3: [-1, 0, 1],
@@ -307,13 +304,13 @@ class App(QMainWindow):
                         if not (0 <= cx < self.image.shape[1] and 0 <= cy < self.image.shape[0]):
                             continue
                         candidate = QPointF(cx, cy)
-                        # Elasticity
+                        # Elasticity: Encourages the snake to remain connected smoothly. (measures distance)
                         elast = ((cx - prev.x()) ** 2 + (cy - prev.y()) ** 2 +
                                  (next.x() - cx) ** 2 + (next.y() - cy) ** 2)
-                        # Stiffness
-                        stiff = ((prev.x() - 2 * cx + next.x()) ** 2 +
+                        # Stiffness: Promotes smoothness and penalizes abrupt changes
+                        stiff = ((prev.x() - 2 * cx + next.x()) ** 2 + # derived from second derivative (change in direction)
                                  (prev.y() - 2 * cy + next.y()) ** 2)
-                        # External energy
+                        # External energy: Pulls the snake toward edges (the closest to edges, the highest the external energy)
                         e_ext = self.E_ext[cy, cx]
                         energy = alpha * elast + beta * stiff + gamma * e_ext
                         if energy < min_energy:
