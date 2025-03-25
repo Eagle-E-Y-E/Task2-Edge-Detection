@@ -140,62 +140,65 @@ def hough_lines(source: np.ndarray, num_peaks: int = 10) -> np.ndarray:
 
 
 def detectCircles(img, threshold, region, radius = None):
-    """
-
-    :param img:
-    :param threshold:
-    :param region:
-    :param radius:
-    :return:
-    """
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = cv2.GaussianBlur(img, (5, 5), 1.5)
     img = cv2.Canny(img, 100, 200)
+
     (M,N) = img.shape
-    if radius == None: # in case no radius is provided
+    if radius == None: # in case no radius is provided ==> default
         R_max = np.max((M,N))
         R_min = 3
     else:
-        [R_max,R_min] = radius
+        [R_max,R_min] = radius 
 
-    R = R_max - R_min
-    #Initializing accumulator array.
-    #Accumulator array is a 3 dimensional array with the dimensions representing
-    #the radius, X coordinate and Y coordinate resectively.
-    #Also appending a padding of 2 times R_max to overcome the problems of overflow
+    R = R_max - R_min 
+    # A:
+    # The first dimension represents the radius.
+    # The second and third dimensions represent the X and Y coordinates of the circle center, pad with R_max zeros.
     A = np.zeros((R_max,M+2*R_max,N+2*R_max))
-    B = np.zeros((R_max,M+2*R_max,N+2*R_max))
+    B = np.zeros((R_max,M+2*R_max,N+2*R_max)) # used for storing the final detected circles after non-maximal suppression.
 
-    #Precomputing all angles to increase the speed of the algorithm
-    theta = np.arange(0,360)*np.pi/180
-    edges = np.argwhere(img[:,:])                                               #Extracting all edge coordinates
-    for val in range(R):
+    theta = np.arange(0,360)*np.pi/180 # 360 radian angles
+    edges = np.argwhere(img[:,:]) # all edge coordinates where non zero canny
+
+    ## Voting
+    for val in range(R): # for each value r in the range
         r = R_min+val
-        #Creating a Circle Blueprint
-        bprint = np.zeros((2*(r+1),2*(r+1)))
-        (m,n) = (r+1,r+1)                                                       #Finding out the center of the blueprint
-        for angle in theta:
+        circle_template = np.zeros((2*(r+1),2*(r+1)))
+        (m,n) = (r+1,r+1)     # center of the circle template
+
+        # create the points on the circle for each theta
+        for angle in theta: 
             x = int(np.round(r*np.cos(angle)))
             y = int(np.round(r*np.sin(angle)))
-            bprint[m+x,n+y] = 1
-        constant = np.argwhere(bprint).shape[0]
-        for x,y in edges:                                                       #For each edge coordinates
-            #Centering the blueprint circle over the edges
-            #and updating the accumulator array
-            X = [x-m+R_max,x+m+R_max]                                           #Computing the extreme X values
-            Y= [y-n+R_max,y+n+R_max]                                            #Computing the extreme Y values
-            A[r,X[0]:X[1],Y[0]:Y[1]] += bprint
-        A[r][A[r]<threshold*constant/r] = 0
+            circle_template[m+x,n+y] = 1
 
-    for r,x,y in np.argwhere(A):
-        temp = A[r-region:r+region,x-region:x+region,y-region:y+region]
+
+        num_pnts = np.argwhere(circle_template).shape[0]
+
+        
+        for x,y in edges:                                                       
+            X = [x-m+R_max,x+m+R_max]  # account for padding and center m,n
+            Y= [y-n+R_max,y+n+R_max]
+            A[r,X[0]:X[1],Y[0]:Y[1]] += circle_template #Adds the circle_template to the corresponding region in the accumulator array A for the current radius r
+
+            
+        A[r][A[r]<threshold*num_pnts/r] = 0
+
+    ## Non-Maximal Suppression
+    for r,x,y in np.argwhere(A): # for each non zero value in A
+        temp = A[r-region:r+region,x-region:x+region,y-region:y+region] # a (region) sized square is taken
         try:
-            p,a,b = np.unravel_index(np.argmax(temp),temp.shape)
+            p,a,b = np.unravel_index(np.argmax(temp),temp.shape) # find the index of max value of the temp array wich is a region of accumulator array
+            # p ==> radius dimension.
+            # a ==> x within the region.
+            # b ==> y within the region.
         except:
             continue
-        B[r+(p-region),x+(a-region),y+(b-region)] = 1
+        B[r+(p-region),x+(a-region),y+(b-region)] = 1 # adjust the max values p,a,b by -region to be a global coordinate
+        # and sets the detected circle in the accumulator B to 1
 
-    return B[:,R_max:-R_max,R_max:-R_max]
+    return B[:,R_max:-R_max,R_max:-R_max] # final accumulator array after removing padding
 
 def displayCircles(A, img):
     """
