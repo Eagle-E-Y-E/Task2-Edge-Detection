@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 
-def hough_peaks(H, num_peaks, nhood_size=3):
+def hough_peaks(accumulator, num_peaks, nhood_size=3):
     """
     A function that returns the indices of the accumulator array H that
     correspond to a local maxima.  If threshold is active all values less
@@ -16,49 +16,45 @@ def hough_peaks(H, num_peaks, nhood_size=3):
     """
 
     # loop through number of peaks to identify
-    indices = []
-    H1 = np.copy(H)
-    for i in range(num_peaks):
-        idx = np.argmax(H1)  # find argmax in flattened array
-        H1_idx = np.unravel_index(idx, H1.shape)  # remap to shape of H
-        indices.append(H1_idx)
+    indices = [] # contains (y, x) of each peak
+    accumulator_ = np.copy(accumulator)
+    for _ in range(num_peaks):
+        idx = np.argmax(accumulator_)  # argmax treats accumulator as 1d array
+        accumulator_idx = np.unravel_index(idx, accumulator_.shape)  # remap to shape of H
+        indices.append(accumulator_idx)
 
         # surpass indices in neighborhood
-        idx_y, idx_x = H1_idx  # first separate x, y indexes from argmax(H)
+        idx_y, idx_x = accumulator_idx  # first separate x, y indexes from argmax(H)
         # if idx_x is too close to the edges choose appropriate values
-        if (idx_x - (nhood_size / 2)) < 0:
-            min_x = 0
-        else:
-            min_x = idx_x - (nhood_size / 2)
-        if (idx_x + (nhood_size / 2) + 1) > H.shape[1]:
-            max_x = H.shape[1]
+        min_x = max(idx_x - (nhood_size / 2), 0)
+
+        if (idx_x + (nhood_size / 2) + 1) > accumulator.shape[1]:
+            max_x = accumulator.shape[1]
         else:
             max_x = idx_x + (nhood_size / 2) + 1
 
         # if idx_y is too close to the edges choose appropriate values
-        if (idx_y - (nhood_size / 2)) < 0:
-            min_y = 0
-        else:
-            min_y = idx_y - (nhood_size / 2)
-        if (idx_y + (nhood_size / 2) + 1) > H.shape[0]:
-            max_y = H.shape[0]
+        min_y = max(idx_y - (nhood_size / 2), 0)
+        
+        if (idx_y + (nhood_size / 2) + 1) > accumulator.shape[0]:
+            max_y = accumulator.shape[0]
         else:
             max_y = idx_y + (nhood_size / 2) + 1
 
         # bound each index by the neighborhood size and set all values to 0
         for x in range(int(min_x), int(max_x)):
             for y in range(int(min_y), int(max_y)):
-                # remove neighborhoods in H1
-                H1[y, x] = 0
+                # remove neighborhoods in accumulator
+                accumulator_[y, x] = 0
 
-                # highlight peaks in original H
+                # highlight peaks in original accumulator
                 if x == min_x or x == (max_x - 1):
-                    H[y, x] = 255
+                    accumulator[y, x] = 255
                 if y == min_y or y == (max_y - 1):
-                    H[y, x] = 255
+                    accumulator[y, x] = 255
 
-    # return the indices and the original Hough space with selected points
-    return indices, H
+    # return the indices and the original accumulator space with selected points
+    return indices, accumulator
 
 
 def hough_lines_draw(img, indices, rhos, thetas):
