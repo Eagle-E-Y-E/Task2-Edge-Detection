@@ -150,7 +150,7 @@ class App(QMainWindow):
             return
 
         # Compute gradients using the manually implemented sobel operator.
-        self.image = cv2.blur(self.image, (3, 3))
+        # self.image = cv2.blur(self.image, (3, 3))
         grad_x, grad_y = self.sobel_manual(self.image)
         # Compute gradient magnitude.
         grad_mag = np.sqrt(grad_x ** 2 + grad_y ** 2)
@@ -221,7 +221,6 @@ class App(QMainWindow):
         if num_points is None:
             num_points = len(self.contour_points)
 
-        # Convert the list of QPointF to separate x and y arrays.
         x = np.array([p.x() for p in self.contour_points])
         y = np.array([p.y() for p in self.contour_points])
 
@@ -427,7 +426,6 @@ class App(QMainWindow):
         for i in range(len(x) - 1):
             area += (x[i] * y[i + 1]) - (x[i + 1] * y[i])
 
-        # Take the absolute value and multiply by 0.5
         area = abs(area) * 0.5
 
         return area
@@ -439,18 +437,14 @@ class App(QMainWindow):
                 self, "Warning", "Please initialize a valid contour first.")
             return
 
-        # Calculate perimeter
         perimeter = self.calculate_perimeter()
 
-        # Calculate area
         area = self.calculate_area()
 
-        # Generate chain code
         self.chain_code = self.generate_chain_code()
 
         print("Perimeter:", perimeter)
 
-        # Update labels
         self.perimeter_label.setText(f"Perimeter: {perimeter:.2f} pixels")
         self.area_label.setText(f"Area: {area:.2f} square pixels")
         self.chain_code_label.setText(
