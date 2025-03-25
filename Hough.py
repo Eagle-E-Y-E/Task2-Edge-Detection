@@ -152,7 +152,7 @@ def detectCircles(img, threshold, region, radius = None):
     img = cv2.GaussianBlur(img, (5, 5), 1.5)
     img = cv2.Canny(img, 100, 200)
     (M,N) = img.shape
-    if radius == None:
+    if radius == None: # in case no radius is provided
         R_max = np.max((M,N))
         R_min = 3
     else:
