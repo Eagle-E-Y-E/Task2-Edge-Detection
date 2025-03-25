@@ -171,7 +171,6 @@ class App(QMainWindow):
         self.scene.clear()
         self.scene.addPixmap(pixmap)
         self.scene.setSceneRect(0, 0, w, h)
-        # Fit the image to the view
         self.view.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
         self.contour_points = []
         self.contour_item = None
@@ -260,9 +259,8 @@ class App(QMainWindow):
             if not self.drawing_mode and self.contour_points:
                 path.closeSubpath()
 
-            # Create a QPen with the desired color (e.g., red) and optionally set width
             pen = QPen(QColor("red"))
-            pen.setWidth(2)  # Adjust the width as needed
+            pen.setWidth(2) 
 
             # Add the path to the scene with the specified pen
             self.contour_item = self.scene.addPath(path, pen)
