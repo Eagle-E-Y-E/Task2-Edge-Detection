@@ -1038,7 +1038,7 @@ border-color: rgb(0, 0, 127);</string>
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
-        <string>Page</string>
+        <string>Hough</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_16">
         <item>
@@ -1084,96 +1084,15 @@ border-color: rgb(0, 0, 127);</string>
                  <property name="sizeConstraint">
                   <enum>QLayout::SetFixedSize</enum>
                  </property>
-                 <item>
-                  <widget class="QLabel" name="label_55">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string>Name:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="label_imgName_7">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>210</width>
-                     <height>25</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>No Image</string>
-                   </property>
-                  </widget>
-                 </item>
                 </layout>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_47">
-                 <item>
-                  <widget class="QLabel" name="label_56">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string>Size:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="label_imgSize_7">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>210</width>
-                     <height>25</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>No Image</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                <layout class="QHBoxLayout" name="horizontalLayout_47"/>
                </item>
                <item>
-                <spacer name="verticalSpacer_33">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                 <property name="sizeType">
-                  <enum>QSizePolicy::Fixed</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QGroupBox" name="hough_settings_layout_2">
+                <widget class="QGroupBox" name="hough_settings_layout">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1220,7 +1139,10 @@ border-color: rgb(0, 0, 127);</string>
                        </widget>
                       </item>
                       <item>
-                       <widget class="QRadioButton" name="radioButton_lines_2">
+                       <widget class="QRadioButton" name="radioButton_lines">
+                        <property name="enabled">
+                         <bool>true</bool>
+                        </property>
                         <property name="text">
                          <string>Lines</string>
                         </property>
@@ -1230,7 +1152,7 @@ border-color: rgb(0, 0, 127);</string>
                        </widget>
                       </item>
                       <item>
-                       <widget class="QRadioButton" name="radioButton_circles_2">
+                       <widget class="QRadioButton" name="radioButton_circles">
                         <property name="text">
                          <string>Circles</string>
                         </property>
@@ -1287,7 +1209,10 @@ border-color: rgb(0, 0, 127);</string>
                          </widget>
                         </item>
                         <item>
-                         <widget class="QLineEdit" name="text_min_radius_2">
+                         <widget class="QLineEdit" name="text_min_radius">
+                          <property name="enabled">
+                           <bool>true</bool>
+                          </property>
                           <property name="maximumSize">
                            <size>
                             <width>210</width>
@@ -1329,7 +1254,7 @@ border-color: rgb(0, 0, 127);</string>
                          </widget>
                         </item>
                         <item>
-                         <widget class="QLineEdit" name="text_max_radius_2">
+                         <widget class="QLineEdit" name="text_max_radius">
                           <property name="maximumSize">
                            <size>
                             <width>210</width>
@@ -1389,7 +1314,10 @@ border-color: rgb(0, 0, 127);</string>
                        </widget>
                       </item>
                       <item>
-                       <widget class="QLineEdit" name="text_votes_2">
+                       <widget class="QLineEdit" name="text_votes">
+                        <property name="enabled">
+                         <bool>true</bool>
+                        </property>
                         <property name="maximumSize">
                          <size>
                           <width>210</width>
@@ -1409,28 +1337,7 @@ border-color: rgb(0, 0, 127);</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="btn_hough_2">
-                 <property name="enabled">
-                  <bool>false</bool>
-                 </property>
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>210</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>210</width>
-                   <height>30</height>
-                  </size>
-                 </property>
+                <widget class="QPushButton" name="apply_Hough_btn">
                  <property name="text">
                   <string>Apply</string>
                  </property>
@@ -1498,7 +1405,7 @@ border-color: rgb(0, 0, 127);</string>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_60">
                     <item row="0" column="0">
-                     <widget class="ImageView" name="img4_output_2" native="true"/>
+                     <widget class="ImageView" name="img4_output" native="true"/>
                     </item>
                    </layout>
                   </widget>

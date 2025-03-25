@@ -9,7 +9,8 @@ from PyQt5 import uic
 
 from Canny import Canny
 from utils import load_pixmap_to_label, display_image_Graphics_scene
-
+from PyQt5 import QtWidgets
+import Hough
 
 class App(QMainWindow):
     def __init__(self):
@@ -78,6 +79,91 @@ class App(QMainWindow):
         self.slider2.valueChanged.connect(
             lambda: self.beta_2_label.setText(f"{self.slider2.value()/100}"))
         self.window_size_slider.valueChanged.connect(self.adjust_to_odd_value)
+
+
+
+        ############# Hough UI link
+         # Setup Hybrid Button
+        # self.btn_hybrid.clicked.connect(self.hybrid_image)
+
+        # # Setup Hough Button
+        self.apply_Hough_btn.clicked.connect(self.hough_transform)
+
+        self.btn_load_7.clicked.connect(self.load_image_Hough)
+
+        self.setup_images_view()
+        self.hough_settings_layout.setEnabled(True)
+
+    def setup_images_view(self):
+        """
+        Adjust the shape and scales of the widgets
+        Remove unnecessary options
+        :return:
+        """
+        for widget in [self.img4_output, self.img4_input_2]:
+            widget.ui.histogram.hide()
+            widget.ui.roiBtn.hide()
+            widget.ui.menuBtn.hide()
+            widget.ui.roiPlot.hide()
+            widget.getView().setAspectLocked(False)
+            widget.view.setAspectLocked(False)
+
+    def load_image_Hough(self):
+        repo_path = "./src/Images"
+        filename, file_format = QtWidgets.QFileDialog.getOpenFileName(None, "Load Image", repo_path,
+                                                                      "*;;" "*.jpg;;" "*.jpeg;;" "*.png;;")
+        img_name = filename.split('/')[-1]
+        if filename == "":
+            pass
+        else:
+            image = cv2.imread(filename, flags=cv2.IMREAD_GRAYSCALE).T
+
+            bgr_img = cv2.imread(filename)
+            rgb_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB)
+            imgbyte_rgb = cv2.transpose(rgb_img)
+            self.display_image(imgbyte_rgb, self.img4_input_2)
+            self.Hough_image_org = imgbyte_rgb
+
+
+    def hough_transform(self):
+        """
+        Apply a hough transformation to detect lines or circles in the given image
+        :return:
+        """
+
+        hough_image = None
+
+        # Get Parameters Values from the user
+        min_radius = int(self.text_min_radius.text())
+        max_radius = int(self.text_max_radius.text())
+        num_votes = int(self.text_votes.text())
+
+        if self.radioButton_lines.isChecked():
+            hough_image = Hough.hough_lines(source=self.Hough_image_org, num_peaks=num_votes)
+        elif self.radioButton_circles.isChecked():
+            hough_image = Hough.hough_circles(source=self.Hough_image_org, min_radius=min_radius,
+                                              max_radius=max_radius)
+
+        try:
+            self.display_image(source=hough_image, widget=self.img4_output)
+        except TypeError:
+            print("Cannot display Image")
+
+
+    def display_image(self,source, widget):
+        """
+        Display the given data
+        :param source: 2d numpy array
+        :param widget: ImageView object
+        :return:
+        """
+        widget.setImage(source)
+        widget.view.setRange(xRange=[0, source.shape[0]], yRange=[0, source.shape[1]],
+                             padding=0)
+        widget.ui.roiPlot.hide()
+
+
+        
 
     def adjust_to_odd_value(self):
         value = self.window_size_slider.value()
