@@ -40,6 +40,7 @@ class App(QMainWindow):
         self.save_btn.clicked.connect(self.save_chain_code)
         self.filter_btn.clicked.connect(self.canny_detection)
 
+        self.original_image = None
         self.image = None
         self.E_ext = None
         self.contour_points = []
@@ -228,15 +229,15 @@ class App(QMainWindow):
         file_path, _ = QFileDialog.getOpenFileName(
             self, "Open Image", "", "Image Files (*.png *.jpg *.jpeg *.bmp)")
         if file_path:
-            self.image = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
-            if self.image is None:
+            self.original_image = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
+            if self.original_image is None:
                 QMessageBox.critical(self, "Error", "Could not load image.")
                 return
         else:
             return
 
         # Compute gradients using the manually implemented sobel operator.
-        # self.image = cv2.blur(self.image, (3, 3))
+        self.image = cv2.blur(self.original_image, (9, 9))
         grad_x, grad_y = self.sobel_manual(self.image)
         # Compute gradient magnitude.
         grad_mag = np.sqrt(grad_x ** 2 + grad_y ** 2)
@@ -254,7 +255,7 @@ class App(QMainWindow):
 
     def reset_contour(self):
         h, w = self.image.shape
-        qimage = QImage(self.image.data, w, h, w, QImage.Format_Grayscale8)
+        qimage = QImage(self.original_image.data, w, h, w, QImage.Format_Grayscale8)
         pixmap = QPixmap.fromImage(qimage)
         self.scene.clear()
         self.scene.addPixmap(pixmap)
