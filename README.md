@@ -5,7 +5,10 @@
 **Task2-Edge-Detection** is a Python-based application that implements various edge detection algorithms to analyze and process images. It provides functionalities such as grayscale conversion, histogram equalization, noise addition, filtering, and edge detection using different operators. The application features a graphical user interface (GUI) for user-friendly interaction.
 
 ## Snake 🐍 (Active Contour)
-![active_contour_gif](snake.gif)
+<div align="center">
+   <img src="snake.gif" alt="active_contour_gif">
+</div>
+
 
 ## ✨ Features
 
