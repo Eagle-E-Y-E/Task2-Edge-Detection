@@ -229,15 +229,16 @@ class App(QMainWindow):
         file_path, _ = QFileDialog.getOpenFileName(
             self, "Open Image", "", "Image Files (*.png *.jpg *.jpeg *.bmp)")
         if file_path:
-            self.original_image = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
+            self.original_image = cv2.imread(file_path)
             if self.original_image is None:
                 QMessageBox.critical(self, "Error", "Could not load image.")
                 return
         else:
             return
 
+        self.image = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2GRAY)
+        self.image = cv2.blur(self.image, (9, 9))
         # Compute gradients using the manually implemented sobel operator.
-        self.image = cv2.blur(self.original_image, (9, 9))
         grad_x, grad_y = self.sobel_manual(self.image)
         # Compute gradient magnitude.
         grad_mag = np.sqrt(grad_x ** 2 + grad_y ** 2)
@@ -254,8 +255,8 @@ class App(QMainWindow):
             "Stop Initializing" if self.drawing_mode else "Initialize Contour")
 
     def reset_contour(self):
-        h, w = self.image.shape
-        qimage = QImage(self.original_image.data, w, h, w, QImage.Format_Grayscale8)
+        h, w, c = self.original_image.shape 
+        qimage = QImage(self.original_image.data, w, h, 3 * w, QImage.Format_BGR888)  # Use Format_BGR888 if the image is in BGR format (typical for OpenCV)
         pixmap = QPixmap.fromImage(qimage)
         self.scene.clear()
         self.scene.addPixmap(pixmap)
@@ -374,7 +375,7 @@ class App(QMainWindow):
         window_size = self.window_size_slider.value()
 
         for iteration in range(max_iterations):
-            moved = False
+            moves = 0
             new_points = self.contour_points.copy()
             for i in range(len(self.contour_points)):
                 p = self.contour_points[i]
@@ -404,11 +405,12 @@ class App(QMainWindow):
                             best_pos = candidate
                 if best_pos != p:
                     new_points[i] = best_pos
-                    moved = True
+                    moves += 1
             self.contour_points = new_points
             self.update_contour()
             QApplication.processEvents()  # Keep GUI responsive
-            if not moved:
+            print(moves / len(new_points))
+            if moves / len(new_points) < 0.3:
                 break
         print("Finished after", iteration, "iterations")
         self.analyze_contour()
@@ -530,7 +532,7 @@ class App(QMainWindow):
 
         self.chain_code = self.generate_chain_code()
 
-        print("Perimeter:", perimeter)
+        # print("Perimeter:", perimeter)
 
         self.perimeter_label.setText(f"Perimeter: {perimeter:.2f} pixels")
         self.area_label.setText(f"Area: {area:.2f} square pixels")
@@ -554,8 +556,8 @@ class App(QMainWindow):
 
     def canny_detection(self):
         canny_detector = Canny()
-        print(self.slider1.value())
-        print(self.slider2.value())
+        # print(self.slider1.value())
+        # print(self.slider2.value())
         canny_detector.weak_para = self.slider1.value() / 100
         canny_detector.strong_para = self.slider2.value() / 100
         final_edges, marked_image = canny_detector.canny_detection(self.img_path)
